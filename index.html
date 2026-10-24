@@ -1,0 +1,177 @@
+<head>
+/* Fond cosmique animé */
+#cosmic-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Garder le contenu au-dessus du fond */
+body > *:not(#cosmic-canvas) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Boutons cosmiques */
+.cosmic-btn {
+  background: linear-gradient(135deg, #6a00ff, #bd00ff);
+  color: white;
+  border: 1px solid #d7aaff;
+  border-radius: 12px;
+  padding: 12px 22px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 0 12px #8a2be2;
+  transition: transform 0.3s ease,
+              box-shadow 0.3s ease,
+              background 0.3s ease;
+}
+
+.cosmic-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 28px #bd00ff;
+}
+
+.cosmic-btn:active {
+  transform: scale(0.95);
+}
+
+/* Effet lumineux au clic */
+.cosmic-flash {
+  animation: cosmicFlash 0.45s ease-out;
+}
+
+@keyframes cosmicFlash {
+  0%   { filter: brightness(1); }
+  50%  { filter: brightness(1.8); }
+  100% { filter: brightness(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cosmic-btn {
+    transition: none;
+  }
+
+  .cosmic-flash {
+    animation: none;
+  }
+}
+</head>
+<!DOCTYPE html>
+<html>
+  <body><canvas id="cosmic-canvas"></canvas>
+    <h1>salut bienvenu sur le site de thanos</h1>
+    <h2>i love electronics</h2>
+
+const canvas = document.getElementById("cosmic-canvas");
+const ctx = canvas.getContext("2d");
+
+let stars = [];
+let width = 0;
+let height = 0;
+const reducedMotion = window.matchMedia(
+  "(prefers-reduced-motion: reduce)"
+).matches;
+
+function resizeCanvas() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  width = window.innerWidth;
+  height = window.innerHeight;
+
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.width = width + "px";
+  canvas.style.height = height + "px";
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const count = Math.min(
+    Math.floor(width * height / 7000),
+    150
+  );
+
+  stars = Array.from({ length: count }, () => ({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    radius: Math.random() * 1.8 + 0.4,
+    alpha: Math.random(),
+    speed: Math.random() * 0.012 + 0.003,
+    phase: Math.random() * Math.PI * 2,
+    drift: (Math.random() - 0.5) * 0.25
+  }));
+}
+
+function drawStars() {
+  ctx.clearRect(0, 0, width, height);
+
+  stars.forEach(star => {
+    if (!reducedMotion) {
+      star.phase += star.speed;
+      star.x += star.drift;
+
+      if (star.x < 0) star.x = width;
+      if (star.x > width) star.x = 0;
+    }
+
+    const glow = 0.35 +
+      0.65 * (Math.sin(star.phase) + 1) / 2;
+
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(210, 170, 255, ${glow})`;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = "#a855f7";
+    ctx.fill();
+  });
+
+  ctx.shadowBlur = 0;
+
+  if (!reducedMotion) {
+    requestAnimationFrame(drawStars);
+  }
+}
+
+resizeCanvas();
+drawStars();
+
+window.addEventListener("resize", resizeCanvas);
+
+// Interactions avec les boutons cosmiques
+document.querySelectorAll(".cosmic-btn").forEach(button => {
+  button.addEventListener("click", () => {
+    button.classList.remove("cosmic-flash");
+
+    // Redémarre l'effet visuel
+    void button.offsetWidth;
+    button.classList.add("cosmic-flash");
+
+    setTimeout(() => {
+      button.classList.remove("cosmic-flash");
+    }, 500);
+  });
+});
+
+  </body>
+  
+  
+
+</html>
+let starsPaused = reducedMotion;
+
+document.getElementById("starsButton")
+  .addEventListener("click", function () {
+    starsPaused = !starsPaused;
+
+    if (starsPaused) {
+      ctx.clearRect(0, 0, width, height);
+      this.textContent = "✨ Activer les étoiles";
+    } else {
+      this.textContent = "✨ Désactiver les étoiles";
+      drawStars();
+    }
+  });
